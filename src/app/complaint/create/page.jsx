@@ -208,8 +208,8 @@ const AddComplaint = () => {
         const { data } = response
         ToastMessage(data)
         setLoading(false)
-        // reset()
-        // router.push("/complaint/allComplaint")
+        reset()
+        router.push("/complaint/allComplaint")
       }
       else {
 
@@ -1088,7 +1088,7 @@ const AddComplaint = () => {
                       <input
                         id="phoneNumber"
                         name="phoneNumber"
-                        type="tel"
+                        type="number"
                         autoComplete="phoneNumber"
                         required
                         {...register('phoneNumber', {
