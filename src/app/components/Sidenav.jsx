@@ -1431,24 +1431,109 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AddBoxIcon from '@mui/icons-material/AddBox';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 
-const menuItems = [
-  { href: '/dashboard', text: 'Dashboard', icon: <DashboardIcon /> },
-  { href: '/users', text: 'Users', icon: <PeopleIcon /> },
-  { href: '/reports', text: 'Reports', icon: <BarChartIcon /> },
-  {
-    text: 'Products',
-    icon: <ShoppingCartIcon />,
-    submenu: [
-      { href: '/products', text: 'All Products', icon: <ListAltIcon /> },
-      { href: '/products/add', text: 'Add Product', icon: <AddBoxIcon /> },
-    ],
-  },
-];
+ 
+ 
+
+import { AccountBalance, AccountCircle, Analytics, Assignment, BrandingWatermark, Category, Chat, ContactPage, Dashboard, DeveloperMode, Event, ExpandLess, ExpandMore, FactCheck, Feedback, GppGood, HowToReg, Info, Inventory, LiveHelp, LocalShipping, LocationOn, Logout, MarkChatRead, NotificationsNone, Payment, Person, Report, ReportOff, RequestPage, Settings, Summarize, Support, SupportAgent, UsbRounded, VerifiedUserRounded, Visibility, Wallet, Warning, Work } from '@mui/icons-material';
+ 
+import SidebarHeader from './SidebarHeader';
+import { useUser } from './UserContext';
+
+ 
 
 export default function DashboardLayout({ children }) {
   const pathname = usePathname();
   const [expanded, setExpanded] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
+  
+const {user}=useUser()
+const role = user?.user?.role;
+const brandSaas = user?.user?.brandSaas;
+
+const complaints = role === "ADMIN" || role === "EMPLOYEE"
+  ? ['Create', 'Bulk Upload', 'Pending', 'In Progress', 'Part Pending','Assign', 'Upcomming', 'Final Verification', 'Cancel', 'Close', 'Out of Warranty', 'All Service']
+  : role === "BRAND" || role === "BRAND EMPLOYEE"
+  ? ['Create', 'Bulk Upload', 'Pending', 'Assign', 'In Progress', 'Part Pending', 'Upcomming', 'Final Verification','Cancel', 'Close', 'All Service']
+  : role === "SERVICE"
+  ? ['Pending', 'Assign', 'In Progress', 'Part Pending', 'Upcomming', 'Cancel', 'Close', 'All Service']
+  : role === "TECHNICIAN"
+  ? ['Assign', 'In Progress', 'Part Pending', 'Upcomming', 'Cancel', 'Close', 'All Service']
+  : role === "USER"
+  ? ['Create', 'All Service', 'Pending', 'Upcomming', 'Assign', 'Close']
+  : ['Create', 'Pending', 'Assign', 'Upcomming', 'Close', 'All Service'];
+
+const userSide = role === "ADMIN"
+  ? ['Brand', 'Service', 'Employee', 'Dealer', 'Customer', 'Technician']
+  : role === "BRAND" && brandSaas === "YES"
+  ? ['Service', 'Dealer', 'Customer', 'Employee']
+  : role === "BRAND"
+  ? ['Dealer', 'Customer']
+  : role === "EMPLOYEE"
+  ? ['Service']
+  : [];
+
+const productSide = role === "ADMIN"
+  ? ['Category', 'Product', 'SparePart', 'Complaint Nature', "Warranty"]
+  : role === "BRAND" || role === "BRAND EMPLOYEE"
+  ? ['Product', 'SparePart', 'Complaint Nature', "Warranty"]
+  : ['Product'];
+
+const inventory = role === "ADMIN"
+  ? [ "inventory", "Stock", "Order"]
+  : ["Stock", "Order"];
+
+// Build the menuItems array dynamically
+const menuItems = [
+  { href: '/dashboard', text: 'Dashboard', icon: <DashboardIcon /> },
+  {
+    text: 'Complaints',
+    icon: <ListAltIcon />,
+    submenu: complaints.map((item) => ({
+      href: `/complaint/${item.toLowerCase().replace(/\s+/g, '-')}`,
+      text: item,
+      icon: <Assignment />
+    })),
+  },
+  ...(userSide.length > 0
+    ? [{
+        text: 'Users',
+        icon: <PeopleIcon />,
+        submenu: userSide.map((item) => ({
+          href: `/users/${item.toLowerCase()}`,
+          text: item,
+          icon: <AccountCircle />,
+        })),
+      }]
+    : []
+  ),
+  ...(productSide.length > 0
+    ? [{
+        text: 'Products',
+        icon: <ShoppingCartIcon />,
+        submenu: productSide.map((item) => ({
+          href: `/products/${item.toLowerCase().replace(/\s+/g, '-')}`,
+          text: item,
+          icon: <Category />,
+        })),
+      }]
+    : []
+  ),
+  ...(inventory.length > 0
+    ? [{
+        text: 'Inventory',
+        icon: <Inventory />,
+        submenu: inventory.map((item) => ({
+          href: `/inventory/${item.toLowerCase()}`,
+          text: item,
+          icon: <ShoppingCartIcon />,
+        })),
+      }]
+    : []
+  ),
+  { href: '/reports', text: 'Reports', icon: <BarChartIcon /> },
+];
+
+ 
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef(null);
 
@@ -1462,19 +1547,20 @@ export default function DashboardLayout({ children }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+
   return (
     <div className="flex-1 flex flex-col transition-all duration-300 overflow-x-auto" style={{ marginLeft: expanded ? '15rem' : '4rem' }}>
       {/* Sidebar */}
       <aside
         onMouseEnter={() => setExpanded(true)}
         onMouseLeave={() => setExpanded(false)}
-        className={`fixed top-0 left-0 h-full bg-white border-r shadow-md z-30
+        className={`fixed top-14 left-0 h-full bg-white border-r shadow-md z-30
     transition-all duration-300 ease-in-out
     ${expanded ? 'w-60' : 'w-16'}
   `}
       >
         {/* Sidebar Header */}
-        <div className="h-14 flex items-center justify-center shadow">
+        {/* <div className="h-14 flex items-center justify-center shadow">
           <div className="flex items-center space-x-2">
             <img
               src="/Logo.png"
@@ -1483,7 +1569,7 @@ export default function DashboardLayout({ children }) {
             />
 
           </div>
-        </div>
+        </div> */}
 
 
 
@@ -1560,47 +1646,8 @@ export default function DashboardLayout({ children }) {
       {/* Main Content Wrapper */}
       <div className="flex-1 flex flex-col transition-all duration-300">
         {/* Topbar - fixed at the top */}
-        <header
-          className="fixed top-0 right-0 z-40 h-14 bg-white shadow flex items-center justify-between px-4 transition-all duration-300"
-          style={{ left: expanded ? '15rem' : '4rem' }} // 15rem = 240px (w-60), 4rem = 64px (w-16)
-        >
-          <div className="flex items-center space-x-4">
-            <div className="relative" ref={notificationRef}>
-              <button
-                onClick={() => setShowNotifications(!showNotifications)}
-                className="text-gray-600 hover:text-black"
-                aria-label="Toggle notifications"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14V11a6 6 0 10-12 0v3c0 .386-.145.735-.405 1.005L4 17h5m6 0v1a3 3 0 01-6 0v-1m6 0H9"
-                  />
-                </svg>
-              </button>
-
-              {showNotifications && (
-                <div className="absolute right-0 mt-2 w-64 bg-white border rounded shadow-lg z-50">
-                  <div className="p-2 text-sm text-gray-700">No new notifications.</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center">A</div>
-            <span className="text-sm font-medium">Admin</span>
-            <button className="text-sm text-blue-500 hover:underline ml-2">Logout</button>
-          </div>
-        </header>
+       
+        <SidebarHeader />
 
         {/* Main Content - add padding top = header height + some space */}
         <main className="flex-1 p-10 pt-24 overflow-auto">
